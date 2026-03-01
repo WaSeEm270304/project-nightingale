@@ -58,7 +58,7 @@ const Index = () => {
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 grid-bg animate-grid-scroll opacity-50" />
-        <div className="relative container mx-auto px-4 py-24 md:py-32">
+        <div className="relative container mx-auto px-4 py-16 md:py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -66,7 +66,7 @@ const Index = () => {
             className="max-w-3xl"
           >
             <p className="text-classified text-primary mb-4 tracking-[0.3em]">// INTELLIGENCE BRIEFING</p>
-            <h1 className="font-heading text-4xl md:text-6xl lg:text-7xl text-foreground leading-[1.1] mb-6">
+            <h1 className="font-heading text-3xl sm:text-4xl md:text-6xl lg:text-7xl text-foreground leading-[1.1] mb-6">
               Every CVE Has a Story.{" "}
               <span className="text-primary red-glow">We Tell It Right.</span>
             </h1>
@@ -75,16 +75,16 @@ const Index = () => {
               Six stages. Two reading modes. Every claim source-backed. This is how cybersecurity
               intelligence should work.
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Link
                 to="/explorer"
-                className="bg-primary px-6 py-3 text-classified text-primary-foreground hover:bg-primary/90 transition-colors border border-primary"
+                className="bg-primary px-6 py-3 text-classified text-primary-foreground hover:bg-primary/90 transition-colors border border-primary text-center"
               >
                 Explore CVEs →
               </Link>
               <Link
                 to="/cve/CVE-2017-0144"
-                className="border border-border px-6 py-3 text-classified text-foreground hover:border-primary hover:text-primary transition-colors"
+                className="border border-border px-6 py-3 text-classified text-foreground hover:border-primary hover:text-primary transition-colors text-center"
               >
                 View EternalBlue
               </Link>
