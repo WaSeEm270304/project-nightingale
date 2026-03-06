@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -18,11 +18,11 @@
     --primary: 0 100% 40%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 10%;
+    --secondary: 0 0% 8%;
     --secondary-foreground: 0 0% 75%;
 
     --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 50%;
+    --muted-foreground: 0 0% 45%;
 
     --accent: 0 100% 40%;
     --accent-foreground: 0 0% 100%;
@@ -30,11 +30,11 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 12%;
+    --border: 0 0% 13%;
+    --input: 0 0% 10%;
     --ring: 0 100% 40%;
 
-    --radius: 0.25rem;
+    --radius: 0.125rem;
 
     --sidebar-background: 0 0% 4%;
     --sidebar-foreground: 0 0% 75%;
@@ -46,7 +46,8 @@
     --sidebar-ring: 0 100% 40%;
 
     --font-heading: 'Oswald', sans-serif;
-    --font-mono: 'Courier New', monospace;
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-body: 'Source Sans 3', sans-serif;
 
     --scanline-opacity: 0.03;
   }
@@ -58,14 +59,17 @@
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: var(--font-mono);
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-body);
+    font-weight: 400;
+    line-height: 1.6;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    line-height: 1.1;
   }
 }
 
@@ -76,6 +80,10 @@
 
   .font-mono {
     font-family: var(--font-mono);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
   }
 
   .text-classified {
@@ -108,17 +116,26 @@
   }
 
   .red-glow {
-    text-shadow: 0 0 10px hsl(0 100% 40% / 0.5), 0 0 30px hsl(0 100% 40% / 0.2);
+    text-shadow: 0 0 10px hsl(0 100% 40% / 0.5), 0 0 40px hsl(0 100% 40% / 0.15);
   }
 
   .border-glow {
-    box-shadow: 0 0 15px hsl(0 100% 40% / 0.15), inset 0 0 15px hsl(0 100% 40% / 0.05);
+    box-shadow: 0 0 20px hsl(0 100% 40% / 0.1), inset 0 0 20px hsl(0 100% 40% / 0.03);
   }
 
   .grid-bg {
     background-image: 
-      linear-gradient(hsl(0 100% 40% / 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(0 100% 40% / 0.05) 1px, transparent 1px);
+      linear-gradient(hsl(0 100% 40% / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(0 100% 40% / 0.04) 1px, transparent 1px);
     background-size: 40px 40px;
+  }
+
+  .ticker-scroll {
+    animation: ticker 20s linear infinite;
+  }
+
+  @keyframes ticker {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
   }
 }

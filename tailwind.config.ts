@@ -7,15 +7,16 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1.5rem",
       screens: {
-        "2xl": "1400px",
+        "2xl": "1280px",
       },
     },
     extend: {
       fontFamily: {
         heading: ['Oswald', 'sans-serif'],
-        mono: ['"Courier New"', 'monospace'],
+        mono: ['"Share Tech Mono"', 'monospace'],
+        body: ['"Source Sans 3"', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
