@@ -2,14 +2,21 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { mockCVEs } from "@/data/mockCves";
+import { enrichedData } from "@/data/cveEnrichedData";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ScoringPanel from "@/components/cve/ScoringPanel";
+import VerifiedSourcesBar from "@/components/cve/VerifiedSourcesBar";
+import AffectedProductsTable from "@/components/cve/AffectedProductsTable";
+import ReferencesSection from "@/components/cve/ReferencesSection";
+import EnrichedTechnicalView from "@/components/cve/EnrichedTechnicalView";
 
 const CveDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [mode, setMode] = useState<"beginner" | "technical">("beginner");
 
   const cve = mockCVEs.find((c) => c.id === id);
+  const enriched = id ? enrichedData[id] : undefined;
 
   if (!cve) {
     return (
@@ -40,7 +47,7 @@ const CveDetail = () => {
       </div>
       <Navbar />
 
-      <div className="container mx-auto py-8 md:py-10">
+      <div className="container mx-auto px-4 py-8 md:py-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -76,28 +83,26 @@ const CveDetail = () => {
           </div>
 
           <h2 className="font-heading text-lg md:text-xl text-muted-foreground mb-4">{cve.name}</h2>
-
-          <div className="flex flex-wrap gap-4 md:gap-6 text-sm mb-6">
-            <div>
-              <span className="text-classified text-muted-foreground">CVSS </span>
-              <span className="font-heading text-xl md:text-2xl text-primary red-glow">{cve.cvss}</span>
-            </div>
-            <div>
-              <span className="text-classified text-muted-foreground">EPSS </span>
-              <span className="font-heading text-xl md:text-2xl text-foreground">{(cve.epss * 100).toFixed(1)}%</span>
-            </div>
-            <div>
-              <span className="text-classified text-muted-foreground">CWE </span>
-              <span className="text-foreground font-mono text-sm">{cve.cwe}</span>
-            </div>
-            <div>
-              <span className="text-classified text-muted-foreground">PUBLISHED </span>
-              <span className="text-foreground font-mono text-sm">{cve.published}</span>
-            </div>
-          </div>
-
           <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">{cve.description}</p>
         </motion.div>
+
+        {/* Scoring Panel */}
+        <ScoringPanel
+          cveId={cve.id}
+          cvss={cve.cvss}
+          epss={cve.epss}
+          severity={cve.severity}
+          published={cve.published}
+          scoring={enriched?.scoring}
+        />
+
+        {/* Verified Sources Bar */}
+        <VerifiedSourcesBar cveId={cve.id} />
+
+        {/* Affected Products */}
+        {enriched?.affectedProducts && (
+          <AffectedProductsTable products={enriched.affectedProducts} />
+        )}
 
         {/* Toggle */}
         <div className="flex flex-col sm:flex-row gap-2 mb-10">
@@ -149,43 +154,48 @@ const CveDetail = () => {
             <div className="absolute left-3 md:left-6 top-14 bottom-0 w-px bg-primary/30" />
 
             <div className="space-y-6 md:space-y-8">
-              {cve.stages.map((stage, i) => (
-                <motion.div
-                  key={stage.stage}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="relative pl-8 md:pl-16 group"
-                >
-                  {/* Timeline dot */}
-                  <div className="absolute left-1.5 md:left-4.5 top-2 w-3 h-3 border-2 border-primary bg-background rounded-full group-hover:bg-primary transition-colors" />
+              {cve.stages.map((stage, i) => {
+                const stageEnriched = enriched?.enrichedStages?.[stage.stage];
+                return (
+                  <motion.div
+                    key={stage.stage}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="relative pl-8 md:pl-16 group"
+                  >
+                    {/* Timeline dot */}
+                    <div className="absolute left-1.5 md:left-4.5 top-2 w-3 h-3 border-2 border-primary bg-background rounded-full group-hover:bg-primary transition-colors" />
 
-                  <div className="border border-border p-4 md:p-6 hover:border-primary/50 transition-colors">
-                    <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
-                      <span className="bg-primary/10 border border-primary/30 px-2 py-0.5 text-classified text-primary">
-                        STAGE {stage.stage}: {stage.label}
-                      </span>
-                      <span className="text-classified text-muted-foreground">{stage.date}</span>
+                    <div className="border border-border p-4 md:p-6 hover:border-primary/50 transition-colors">
+                      <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+                        <span className="bg-primary/10 border border-primary/30 px-2 py-0.5 text-classified text-primary">
+                          STAGE {stage.stage}: {stage.label}
+                        </span>
+                        <span className="text-classified text-muted-foreground">{stage.date}</span>
+                      </div>
+
+                      <h3 className="font-heading text-lg md:text-xl text-foreground mb-3">{stage.title}</h3>
+
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-4">{stage.content}</p>
+
+                      {mode === "beginner" ? (
+                        <div className="border-l-2 border-primary pl-4 bg-primary/5 py-3 pr-4">
+                          <p className="text-classified text-primary mb-1">ANALOGY</p>
+                          <p className="text-sm text-foreground italic leading-relaxed">{stage.analogy}</p>
+                        </div>
+                      ) : stageEnriched ? (
+                        <EnrichedTechnicalView enriched={stageEnriched} />
+                      ) : (
+                        <div className="border border-border bg-secondary/50 p-4">
+                          <p className="text-classified text-primary mb-1">TECHNICAL BREAKDOWN</p>
+                          <p className="text-xs text-foreground leading-relaxed font-mono">{stage.technical}</p>
+                        </div>
+                      )}
                     </div>
-
-                    <h3 className="font-heading text-lg md:text-xl text-foreground mb-3">{stage.title}</h3>
-
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">{stage.content}</p>
-
-                    {mode === "beginner" ? (
-                      <div className="border-l-2 border-primary pl-4 bg-primary/5 py-3 pr-4">
-                        <p className="text-classified text-primary mb-1">ANALOGY</p>
-                        <p className="text-sm text-foreground italic leading-relaxed">{stage.analogy}</p>
-                      </div>
-                    ) : (
-                      <div className="border border-border bg-secondary/50 p-4">
-                        <p className="text-classified text-primary mb-1">TECHNICAL BREAKDOWN</p>
-                        <p className="text-xs text-foreground leading-relaxed font-mono">{stage.technical}</p>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         ) : (
@@ -197,8 +207,11 @@ const CveDetail = () => {
           </div>
         )}
 
-        {/* Sources */}
-        {cve.sources.length > 0 && (
+        {/* References from enriched data */}
+        {enriched?.references && <ReferencesSection references={enriched.references} />}
+
+        {/* Legacy sources fallback */}
+        {!enriched?.references && cve.sources.length > 0 && (
           <div className="mt-12 border-t border-border pt-8">
             <p className="text-classified text-primary mb-4 tracking-[0.3em]">// SOURCES & REFERENCES</p>
             <div className="flex flex-wrap gap-2 md:gap-3">
@@ -206,6 +219,8 @@ const CveDetail = () => {
                 <a
                   key={s.label}
                   href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="border border-border px-3 md:px-4 py-2 text-classified text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[44px] flex items-center"
                 >
                   {s.label} ↗
