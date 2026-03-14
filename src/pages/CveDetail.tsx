@@ -10,10 +10,13 @@ import VerifiedSourcesBar from "@/components/cve/VerifiedSourcesBar";
 import AffectedProductsTable from "@/components/cve/AffectedProductsTable";
 import ReferencesSection from "@/components/cve/ReferencesSection";
 import EnrichedTechnicalView from "@/components/cve/EnrichedTechnicalView";
+import AITimeline from "@/components/cve/AITimeline";
+import { useCveStory } from "@/hooks/useCveStory";
 
 const CveDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [mode, setMode] = useState<"beginner" | "technical">("beginner");
+  const { aiStages, loading: aiLoading, error: aiError, generate } = useCveStory(id);
 
   const cve = mockCVEs.find((c) => c.id === id);
   const enriched = id ? enrichedData[id] : undefined;
@@ -145,66 +148,104 @@ const CveDetail = () => {
           </div>
         )}
 
-        {/* Timeline */}
-        {cve.stages.length > 0 ? (
-          <div className="relative">
-            <p className="text-classified text-primary mb-6 tracking-[0.3em]">// VULNERABILITY LIFECYCLE</p>
+        {/* AI Generate Button */}
+        <div className="mb-8">
+          <button
+            onClick={generate}
+            disabled={aiLoading}
+            className="border border-primary bg-primary/10 px-6 py-3 text-classified text-primary hover:bg-primary hover:text-primary-foreground transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {aiLoading ? "◉ GENERATING INTELLIGENCE NARRATIVE..." : "◉ GENERATE AI INTELLIGENCE NARRATIVE"}
+          </button>
+          {aiError && (
+            <p className="text-primary text-xs font-mono mt-2">ERROR: {aiError}</p>
+          )}
+        </div>
 
-            {/* Vertical red line */}
-            <div className="absolute left-3 md:left-6 top-14 bottom-0 w-px bg-primary/30" />
-
-            <div className="space-y-6 md:space-y-8">
-              {cve.stages.map((stage, i) => {
-                const stageEnriched = enriched?.enrichedStages?.[stage.stage];
-                return (
-                  <motion.div
-                    key={stage.stage}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="relative pl-8 md:pl-16 group"
-                  >
-                    {/* Timeline dot */}
-                    <div className="absolute left-1.5 md:left-4.5 top-2 w-3 h-3 border-2 border-primary bg-background rounded-full group-hover:bg-primary transition-colors" />
-
-                    <div className="border border-border p-4 md:p-6 hover:border-primary/50 transition-colors">
-                      <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
-                        <span className="bg-primary/10 border border-primary/30 px-2 py-0.5 text-classified text-primary">
-                          STAGE {stage.stage}: {stage.label}
-                        </span>
-                        <span className="text-classified text-muted-foreground">{stage.date}</span>
-                      </div>
-
-                      <h3 className="font-heading text-lg md:text-xl text-foreground mb-3">{stage.title}</h3>
-
-                      <p className="text-sm text-muted-foreground leading-relaxed mb-4">{stage.content}</p>
-
-                      {mode === "beginner" ? (
-                        <div className="border-l-2 border-primary pl-4 bg-primary/5 py-3 pr-4">
-                          <p className="text-classified text-primary mb-1">ANALOGY</p>
-                          <p className="text-sm text-foreground italic leading-relaxed">{stage.analogy}</p>
-                        </div>
-                      ) : stageEnriched ? (
-                        <EnrichedTechnicalView enriched={stageEnriched} />
-                      ) : (
-                        <div className="border border-border bg-secondary/50 p-4">
-                          <p className="text-classified text-primary mb-1">TECHNICAL BREAKDOWN</p>
-                          <p className="text-xs text-foreground leading-relaxed font-mono">{stage.technical}</p>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
+        {/* AI Loading State */}
+        {aiLoading && (
+          <div className="border border-primary/30 bg-primary/5 p-10 text-center mb-8">
+            <div className="inline-block mb-4">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
-          </div>
-        ) : (
-          <div className="border border-border p-10 text-center">
-            <p className="text-classified text-muted-foreground">// FULL INTELLIGENCE NARRATIVE PENDING</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              This CVE's 6-stage lifecycle analysis is currently being prepared.
+            <p className="text-classified text-primary tracking-[0.3em] animate-pulse">
+              // GENERATING INTELLIGENCE NARRATIVE...
+            </p>
+            <p className="text-xs text-muted-foreground font-mono mt-2">
+              Fetching NVD data • Analyzing EPSS scores • Checking KEV status • Generating 6-stage narrative
             </p>
           </div>
+        )}
+
+        {/* AI Generated Timeline */}
+        {aiStages && !aiLoading && (
+          <AITimeline stages={aiStages} mode={mode} />
+        )}
+
+        {/* Static Timeline (shown when no AI stages) */}
+        {!aiStages && !aiLoading && (
+          <>
+            {cve.stages.length > 0 ? (
+              <div className="relative">
+                <p className="text-classified text-primary mb-6 tracking-[0.3em]">// VULNERABILITY LIFECYCLE</p>
+
+                {/* Vertical red line */}
+                <div className="absolute left-3 md:left-6 top-14 bottom-0 w-px bg-primary/30" />
+
+                <div className="space-y-6 md:space-y-8">
+                  {cve.stages.map((stage, i) => {
+                    const stageEnriched = enriched?.enrichedStages?.[stage.stage];
+                    return (
+                      <motion.div
+                        key={stage.stage}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="relative pl-8 md:pl-16 group"
+                      >
+                        {/* Timeline dot */}
+                        <div className="absolute left-1.5 md:left-4.5 top-2 w-3 h-3 border-2 border-primary bg-background rounded-full group-hover:bg-primary transition-colors" />
+
+                        <div className="border border-border p-4 md:p-6 hover:border-primary/50 transition-colors">
+                          <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+                            <span className="bg-primary/10 border border-primary/30 px-2 py-0.5 text-classified text-primary">
+                              STAGE {stage.stage}: {stage.label}
+                            </span>
+                            <span className="text-classified text-muted-foreground">{stage.date}</span>
+                          </div>
+
+                          <h3 className="font-heading text-lg md:text-xl text-foreground mb-3">{stage.title}</h3>
+
+                          <p className="text-sm text-muted-foreground leading-relaxed mb-4">{stage.content}</p>
+
+                          {mode === "beginner" ? (
+                            <div className="border-l-2 border-primary pl-4 bg-primary/5 py-3 pr-4">
+                              <p className="text-classified text-primary mb-1">ANALOGY</p>
+                              <p className="text-sm text-foreground italic leading-relaxed">{stage.analogy}</p>
+                            </div>
+                          ) : stageEnriched ? (
+                            <EnrichedTechnicalView enriched={stageEnriched} />
+                          ) : (
+                            <div className="border border-border bg-secondary/50 p-4">
+                              <p className="text-classified text-primary mb-1">TECHNICAL BREAKDOWN</p>
+                              <p className="text-xs text-foreground leading-relaxed font-mono">{stage.technical}</p>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="border border-border p-10 text-center">
+                <p className="text-classified text-muted-foreground">// FULL INTELLIGENCE NARRATIVE PENDING</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  This CVE's 6-stage lifecycle analysis is currently being prepared.
+                </p>
+              </div>
+            )}
+          </>
         )}
 
         {/* References from enriched data */}
