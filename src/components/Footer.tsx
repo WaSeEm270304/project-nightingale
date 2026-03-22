@@ -37,10 +37,9 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* AI Disclaimer */}
-        <div className="mt-10 border border-border p-4 bg-secondary/30">
-          <p className="text-xs text-muted-foreground leading-relaxed font-mono text-center">
-            ⚠ All CVE narratives are AI-generated using Claude AI. Source data from NVD, CISA KEV, and FIRST EPSS. Verify all information with primary sources.
+        <div className="mt-10 border-t border-border pt-6">
+          <p className="text-xs text-muted-foreground font-mono text-center">
+            CVE narratives are AI-generated using Groq AI. Source data: NVD, CISA KEV, FIRST EPSS.
           </p>
         </div>
 
