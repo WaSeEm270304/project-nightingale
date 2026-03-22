@@ -31,7 +31,7 @@ const features = [
   { emoji: "📖", title: "Story-Driven Pages", desc: "6-stage visual breakdown of every vulnerability lifecycle." },
   { emoji: "🔴", title: "KEV Live Feed", desc: "Real-time CISA Known Exploited Vulnerabilities tracking." },
   { emoji: "⚖", title: "CVE Comparison", desc: "Side by side analysis of multiple vulnerabilities." },
-  { emoji: "🤖", title: "AI-Powered", desc: "Claude AI generates every narrative from verified source data." },
+  { emoji: "🤖", title: "AI-Powered", desc: "Every CVE narrative is AI-generated from verified NVD, KEV, and EPSS source data in real time." },
   { emoji: "📊", title: "Intel Dashboard", desc: "Trends, visualizations, and threat landscape overview." },
 ];
 
