@@ -39,7 +39,6 @@ const trust = [
   { emoji: "📌", title: "Source-Backed", desc: "Every claim traced to NVD, MITRE, CISA, or vendor advisories." },
   { emoji: "🤖", title: "AI-Generated", desc: "Claude AI creates structured narratives from verified source data." },
   { emoji: "🔄", title: "Always Live", desc: "Data synced from NVD, KEV, EPSS in real time." },
-  { emoji: "⚠", title: "AI Disclaimer", desc: "Content is AI-generated. Always verify critical details with primary sources before acting." },
 ];
 
 const tickerCves = [

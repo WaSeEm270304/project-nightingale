@@ -77,13 +77,8 @@ const CveDetail = () => {
             </span>
           </div>
 
-          {/* AI Disclaimer banner */}
-          <div className="mb-5 border border-primary/30 bg-primary/5 px-4 py-2.5 flex items-start gap-2">
-            <span className="text-primary text-sm mt-0.5">⚠</span>
-            <p className="text-xs text-muted-foreground font-mono leading-relaxed">
-              AI-GENERATED CONTENT — Verify with primary sources before acting on this information
-            </p>
-          </div>
+
+
 
           <h2 className="font-heading text-lg md:text-xl text-muted-foreground mb-4">{cve.name}</h2>
           <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">{cve.description}</p>
