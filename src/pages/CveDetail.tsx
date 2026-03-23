@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { mockCVEs } from "@/data/mockCves";
 import { enrichedData } from "@/data/cveEnrichedData";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -12,14 +11,94 @@ import ReferencesSection from "@/components/cve/ReferencesSection";
 import EnrichedTechnicalView from "@/components/cve/EnrichedTechnicalView";
 import AITimeline from "@/components/cve/AITimeline";
 import { useCveStory } from "@/hooks/useCveStory";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
+
+interface CveData {
+  id: string;
+  name: string;
+  description: string;
+  cvss: number;
+  severity: string;
+  epss: number;
+  kev: boolean;
+  published: string;
+  ransomware?: boolean;
+  impact?: {
+    systemsAffected: string;
+    countriesHit: string;
+    financialDamage: string;
+    daysToRespond: string;
+  };
+  sources: { label: string; url: string }[];
+  stages: any[];
+}
 
 const CveDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [mode, setMode] = useState<"beginner" | "technical">("beginner");
   const { aiStages, loading: aiLoading, error: aiError, generate } = useCveStory(id);
 
-  const cve = mockCVEs.find((c) => c.id === id);
+  const [cve, setCve] = useState<CveData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
   const enriched = id ? enrichedData[id] : undefined;
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchCve = async () => {
+      setLoading(true);
+      setFetchError(null);
+      try {
+        const { data, error } = await supabase.functions.invoke("nvd-proxy", {
+          body: { cveId: id },
+        });
+        if (error) throw new Error(error.message);
+        if (data?.error) throw new Error(data.error);
+        if (!data?.results?.length) {
+          setCve(null);
+          return;
+        }
+        const r = data.results[0];
+        setCve({
+          id: r.id,
+          name: r.severity + " Severity Vulnerability",
+          description: r.description,
+          cvss: r.cvss,
+          severity: r.severity,
+          epss: r.epss,
+          kev: r.kev,
+          published: r.published,
+          sources: [],
+          stages: [],
+        });
+      } catch (err: any) {
+        setFetchError(err.message || "Failed to fetch CVE data");
+        setCve(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCve();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="scanline-overlay min-h-screen bg-background">
+        <div className="bg-primary py-1.5 text-center">
+          <p className="text-classified text-primary-foreground tracking-[0.3em]">
+            ★ TOP SECRET // CVE INTELLIGENCE PLATFORM ★
+          </p>
+        </div>
+        <Navbar />
+        <div className="container mx-auto py-20 flex items-center justify-center gap-3">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span className="text-classified text-muted-foreground">RETRIEVING CVE INTELLIGENCE...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!cve) {
     return (
@@ -32,7 +111,9 @@ const CveDetail = () => {
         <Navbar />
         <div className="container mx-auto py-20 text-center">
           <h1 className="font-heading text-3xl md:text-4xl text-foreground mb-4">CVE NOT FOUND</h1>
-          <p className="text-muted-foreground mb-6">The requested CVE identifier does not exist in our database.</p>
+          <p className="text-muted-foreground mb-6">
+            {fetchError || "The requested CVE identifier does not exist in the NVD database."}
+          </p>
           <Link to="/explorer" className="text-classified text-primary hover:underline">← Return to Explorer</Link>
         </div>
       </div>
@@ -76,9 +157,6 @@ const CveDetail = () => {
               AI-GENERATED
             </span>
           </div>
-
-
-
 
           <h2 className="font-heading text-lg md:text-xl text-muted-foreground mb-4">{cve.name}</h2>
           <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">{cve.description}</p>
@@ -177,70 +255,14 @@ const CveDetail = () => {
           <AITimeline stages={aiStages} mode={mode} />
         )}
 
-        {/* Static Timeline (shown when no AI stages) */}
+        {/* No AI stages placeholder */}
         {!aiStages && !aiLoading && (
-          <>
-            {cve.stages.length > 0 ? (
-              <div className="relative">
-                <p className="text-classified text-primary mb-6 tracking-[0.3em]">// VULNERABILITY LIFECYCLE</p>
-
-                {/* Vertical red line */}
-                <div className="absolute left-3 md:left-6 top-14 bottom-0 w-px bg-primary/30" />
-
-                <div className="space-y-6 md:space-y-8">
-                  {cve.stages.map((stage, i) => {
-                    const stageEnriched = enriched?.enrichedStages?.[stage.stage];
-                    return (
-                      <motion.div
-                        key={stage.stage}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="relative pl-8 md:pl-16 group"
-                      >
-                        {/* Timeline dot */}
-                        <div className="absolute left-1.5 md:left-4.5 top-2 w-3 h-3 border-2 border-primary bg-background rounded-full group-hover:bg-primary transition-colors" />
-
-                        <div className="border border-border p-4 md:p-6 hover:border-primary/50 transition-colors">
-                          <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
-                            <span className="bg-primary/10 border border-primary/30 px-2 py-0.5 text-classified text-primary">
-                              STAGE {stage.stage}: {stage.label}
-                            </span>
-                            <span className="text-classified text-muted-foreground">{stage.date}</span>
-                          </div>
-
-                          <h3 className="font-heading text-lg md:text-xl text-foreground mb-3">{stage.title}</h3>
-
-                          <p className="text-sm text-muted-foreground leading-relaxed mb-4">{stage.content}</p>
-
-                          {mode === "beginner" ? (
-                            <div className="border-l-2 border-primary pl-4 bg-primary/5 py-3 pr-4">
-                              <p className="text-classified text-primary mb-1">ANALOGY</p>
-                              <p className="text-sm text-foreground italic leading-relaxed">{stage.analogy}</p>
-                            </div>
-                          ) : stageEnriched ? (
-                            <EnrichedTechnicalView enriched={stageEnriched} />
-                          ) : (
-                            <div className="border border-border bg-secondary/50 p-4">
-                              <p className="text-classified text-primary mb-1">TECHNICAL BREAKDOWN</p>
-                              <p className="text-xs text-foreground leading-relaxed font-mono">{stage.technical}</p>
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="border border-border p-10 text-center">
-                <p className="text-classified text-muted-foreground">// FULL INTELLIGENCE NARRATIVE PENDING</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  This CVE's 6-stage lifecycle analysis is currently being prepared.
-                </p>
-              </div>
-            )}
-          </>
+          <div className="border border-border p-10 text-center">
+            <p className="text-classified text-muted-foreground">// FULL INTELLIGENCE NARRATIVE PENDING</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Click "Generate AI Intelligence Narrative" above to create a 6-stage lifecycle analysis.
+            </p>
+          </div>
         )}
 
         {/* References from enriched data */}
