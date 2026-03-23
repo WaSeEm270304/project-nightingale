@@ -12,19 +12,27 @@ serve(async (req) => {
   }
 
   try {
-    const { searchTerm, startIndex = 0, resultsPerPage = 20, kevOnly = false } = await req.json();
+    const { searchTerm, startIndex = 0, resultsPerPage = 20, kevOnly = false, cveId } = await req.json();
     const nvdApiKey = Deno.env.get("NVD_API_KEY") || "";
 
     // Build NVD URL
-    const params = new URLSearchParams({
-      resultsPerPage: String(resultsPerPage),
-      startIndex: String(startIndex),
-    });
-    if (searchTerm) {
-      params.set("keywordSearch", searchTerm);
-    }
+    let nvdUrl: string;
 
-    const nvdUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?${params}`;
+    if (cveId) {
+      // Single CVE lookup
+      nvdUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=${cveId}`;
+    } else {
+      const params = new URLSearchParams({
+        resultsPerPage: String(resultsPerPage),
+        startIndex: String(startIndex),
+        pubStartDate: "2020-01-01T00:00:00.000",
+        pubEndDate: new Date().toISOString().split(".")[0] + ".000",
+      });
+      if (searchTerm) {
+        params.set("keywordSearch", searchTerm);
+      }
+      nvdUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?${params}`;
+    }
     const headers: Record<string, string> = {};
     if (nvdApiKey) {
       headers["apiKey"] = nvdApiKey;
@@ -119,6 +127,13 @@ serve(async (req) => {
         kev: isKev,
         published,
       };
+    });
+
+    // Sort by published date descending (newest first)
+    results.sort((a: any, b: any) => {
+      if (a.published === "Unknown") return 1;
+      if (b.published === "Unknown") return -1;
+      return b.published.localeCompare(a.published);
     });
 
     // Filter to KEV only if requested
