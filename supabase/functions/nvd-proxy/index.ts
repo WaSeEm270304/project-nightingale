@@ -129,6 +129,13 @@ serve(async (req) => {
       };
     });
 
+    // Sort by published date descending (newest first)
+    results.sort((a: any, b: any) => {
+      if (a.published === "Unknown") return 1;
+      if (b.published === "Unknown") return -1;
+      return b.published.localeCompare(a.published);
+    });
+
     // Filter to KEV only if requested
     if (kevOnly && kevSet) {
       results = results.filter((r: any) => r.kev);
