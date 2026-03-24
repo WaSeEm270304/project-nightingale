@@ -22,11 +22,17 @@ serve(async (req) => {
       // Single CVE lookup
       nvdUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=${cveId}`;
     } else {
+      // NVD API limits date range to 120 days max
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 119);
+      const fmt = (d: Date) => d.toISOString().split(".")[0] + ".000";
+
       const params = new URLSearchParams({
         resultsPerPage: String(resultsPerPage),
         startIndex: String(startIndex),
-        pubStartDate: "2020-01-01T00:00:00.000",
-        pubEndDate: new Date().toISOString().split(".")[0] + ".000",
+        pubStartDate: fmt(startDate),
+        pubEndDate: fmt(endDate),
       });
       if (searchTerm) {
         params.set("keywordSearch", searchTerm);
